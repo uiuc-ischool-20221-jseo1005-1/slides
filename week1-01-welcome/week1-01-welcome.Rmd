@@ -47,7 +47,17 @@ library(emo)
 
 ## About Sharvi
 
+.pull-left-wide[
+- Educational background:
 
+  - B.Tech. in Mathematics and Computing.
+
+  - M.S. in Statistics(currently pursuing)
+
+- Experience
+
+  - Software Engineer at HSBC
+]
 
 ---
 
