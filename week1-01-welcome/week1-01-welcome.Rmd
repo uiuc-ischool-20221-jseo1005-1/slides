@@ -53,6 +53,18 @@ library(emo)
 
 ## About Kenney
 
+.pull-left-wide[
+- A master's student at the iSchool.
+
+- Interested in data science with a focus on:
+  
+  - Text mining.
+
+  - Natural language processing.
+
+  - Biomedical informatics.
+]
+
 
 ---
 
