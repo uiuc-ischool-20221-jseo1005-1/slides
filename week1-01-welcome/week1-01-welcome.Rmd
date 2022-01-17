@@ -36,7 +36,7 @@ library(emo)
 
   - B.Ed. in Education.
 
-  - Ph.D. in Learning Sciences (CS Ed + Psychology)
+  - Ph.D. in Learning Sciences (CS Ed + Psychology).
 
 - Software Engineer Intern at RStudio.
 
