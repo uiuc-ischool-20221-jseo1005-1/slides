@@ -2,7 +2,7 @@
 
 ## Course Slide Decks
 
-* [Week 1-01](https://bookish-couscous-579908f9.pages.github.io/week1-01-welcome/week1-01-welcome.html).
+* [Week 1-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week1-01-welcome/week1-01-welcome.html).
 
 
 ## Dev Toolkit Notes
