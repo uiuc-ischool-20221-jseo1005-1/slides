@@ -4,6 +4,7 @@
 
 * [Week 1-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week1-01-welcome/week1-01-welcome.html).
 
+* [Week 1-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week1-02-git+r/week1-02-git+r.html).
 
 ## Dev Toolkit Notes
 
