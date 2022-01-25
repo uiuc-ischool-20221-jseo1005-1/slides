@@ -18,3 +18,7 @@ Slides are built in using the **xaringan** package. See [here](https://github.co
 ### Dev Instructions
 
 Each slide deck is in its own folder, and one level above there is a custom css file. To compile the slides use `xaringan::inf_mr(cast_from = "..")`. This will launch the slides in the Viewer, and it will get updated as you edit and save your work.
+
+## Acknowledgements
+
+This course and materials are supported by and highly indebted to Mine Centinkaya-Rundel and RStudio Education Team.
