@@ -10,6 +10,9 @@
 
 * [Week 2-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week2-02-viz-num-cat).
 
+* [Week 3-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week3-01-tidy+wrangle).
+
+
 ## Dev Toolkit Notes
 
 Slides are built in using the **xaringan** package. See [here](https://github.com/yihui/xaringan) for more info on xaringan. There are two main reasons for choosing this format:
