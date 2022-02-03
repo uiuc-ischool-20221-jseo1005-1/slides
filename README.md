@@ -12,6 +12,8 @@
 
 * [Week 3-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week3-01-tidy+wrangle).
 
+* [Week 3-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week3-02-df-join).
+
 
 ## Dev Toolkit Notes
 
