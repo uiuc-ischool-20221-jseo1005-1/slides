@@ -14,6 +14,9 @@
 
 * [Week 3-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week3-02-df-join).
 
+* [Week 4-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week4-01-tidying).
+
+
 
 ## Dev Toolkit Notes
 
