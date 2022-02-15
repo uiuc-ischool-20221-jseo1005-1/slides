@@ -16,6 +16,7 @@
 
 * [Week 4-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week4-01-tidying).
 
+* [Week 5-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week5-01-data-type+class).
 
 
 ## Dev Toolkit Notes
