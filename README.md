@@ -18,6 +18,8 @@
 
 * [Week 5-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week5-01-data-type+class).
 
+* [Week 5-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week5-02-data-import+recode).
+
 
 ## Dev Toolkit Notes
 
