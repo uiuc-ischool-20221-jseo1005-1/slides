@@ -1061,6 +1061,67 @@ ggplot(rel_inc_long, aes(y = religion, x = frequency, fill = income)) +
 ]
 
 ]
+
+---
+
+.your-turn[
+### .hand[Your turn!]
+
+- `git clone https://github.com/uiuc-ischool-20221-jseo1005-1/import_practice/[Your_GH_Handle]`
+- `nobels-csv.Rmd`
+- Read in the `nobels.csv` file from the `data-raw/` folder.
+- Split into two (STEM and non-STEM): 
+  - Create a new data frame, `nobel_stem`, that filters for the STEM fields 
+(Physics, Medicine, Chemistry, and Economics).
+  - Create another data frame, `nobel_nonstem`, that filters for the remaining 
+fields.  
+- Write out the two data frames to `nobel-stem.csv` and `nobel-nonstem.csv`, 
+respectively, to `data/`.
+
+**Hint:** Use the `%in%` operator when `filter()`ing.
+]
+
+---
+
+.your-turn[
+### .hand[Your turn!]
+.midi[
+- `sales-excel.Rmd`
+- Load the `sales.xlsx` file from the `data-raw/` folder, using appropriate arguments for the `read_excel()` function such that it looks like the output on the left.
+- **Stretch goal:** Manipulate the sales data such that it looks like the output on the right.
+]
+]
+
+.pull-left[
+
+```
+## # A tibble: 9 x 2
+##   id      n    
+##   &lt;chr&gt;   &lt;chr&gt;
+## 1 Brand 1 n    
+## 2 1234    8    
+## 3 8721    2    
+## 4 1822    3    
+## 5 Brand 2 n    
+## 6 3333    1    
+## # ... with 3 more rows
+```
+]
+.pull-right[
+
+```
+## # A tibble: 7 x 3
+##   brand      id     n
+##   &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt;
+## 1 Brand 1  1234     8
+## 2 Brand 1  8721     2
+## 3 Brand 1  1822     3
+## 4 Brand 2  3333     1
+## 5 Brand 2  2156     3
+## 6 Brand 2  3987     6
+## # ... with 1 more row
+```
+]
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
