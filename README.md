@@ -20,6 +20,9 @@
 
 * [Week 5-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week5-02-data-import+recode).
 
+* [Week 6-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week6-02-web-scrape).
+
+
 
 ## Dev Toolkit Notes
 
