@@ -22,6 +22,7 @@
 
 * [Week 6-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week6-02-web-scrape).
 
+* [Week 7-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week7-01-effective-dataviz).
 
 
 ## Dev Toolkit Notes
