@@ -24,6 +24,8 @@
 
 * [Week 7-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week7-01-effective-dataviz).
 
+* [Week 7-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week7-02-studies-confounding).
+
 
 ## Dev Toolkit Notes
 
