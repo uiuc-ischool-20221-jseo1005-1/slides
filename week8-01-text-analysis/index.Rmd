@@ -1,0 +1,259 @@
+---
+title: "Text analysis <br> `r emo::ji('page_with_curl')`"
+author: "JooYoung Seo"
+output:
+  xaringan::moon_reader:
+    css: "../slides.css"
+    lib_dir: libs
+    nature:
+      ratio: "16:9"
+      highlightLines: true
+      highlightStyle: solarized-light
+      countIncrementalSlides: false
+---
+
+```{r child = "../setup.Rmd"}
+```
+
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+class: middle
+
+# Tidytext analysis
+
+---
+
+## Packages
+
+In addition to `tidyverse` we will be using four other packages today
+
+```{r message=FALSE}
+library(tidytext)
+library(genius)
+library(wordcloud)
+library(DT)
+```
+
+---
+
+## Tidytext
+
+- Using tidy data principles can make many text mining tasks easier, more effective, and consistent with tools already in wide use.
+- Learn more at https://www.tidytextmining.com/.
+
+---
+
+## What is tidy text?
+
+```{r}
+text <- c("Take me out tonight",
+          "Where there's music and there's people",
+          "And they're young and alive",
+          "Driving in your car",
+          "I never never want to go home",
+          "Because I haven't got one",
+          "Anymore")
+
+text
+```
+
+---
+
+## What is tidy text?
+
+```{r}
+text_df <- tibble(line = 1:7, text = text)
+
+text_df
+```
+
+---
+
+## What is tidy text?
+
+```{r}
+text_df %>%
+  unnest_tokens(word, text)
+```
+
+---
+
+class: middle
+
+# What are you listening to?
+
+---
+
+## From the "Getting to know you" survey
+
+> "What are your 3 - 5 most favorite songs right now?"
+
+.midi[
+```{r message=FALSE}
+listening <- read_csv("data/listening.csv")
+listening
+```
+]
+
+---
+
+## Looking for commonalities
+
+.midi[
+```{r}
+listening %>%
+  unnest_tokens(word, songs) %>%
+  count(word, sort = TRUE)
+```
+]
+
+---
+
+## Stop words
+
+- In computing, stop words are words which are filtered out before or after processing of natural language data (text).
+- They usually refer to the most common words in a language, but there is not a single list of stop words used by all natural language processing tools.
+
+---
+
+## English stop words
+
+```{r}
+get_stopwords()
+```
+
+---
+
+## Spanish stop words
+
+```{r}
+get_stopwords(language = "es")
+```
+
+---
+
+## Various lexicons
+
+See `?get_stopwords` for more info.
+
+.midi[
+```{r}
+get_stopwords(source = "smart")
+```
+]
+
+---
+
+## Back to: Looking for commonalities
+
+.small[
+```{r}
+listening %>%
+  unnest_tokens(word, songs) %>%
+  anti_join(stop_words) %>%                           #<<
+  filter(!(word %in% c("1", "2", "3", "4", "5"))) %>% #<<
+  count(word, sort = TRUE)
+```
+]
+
+---
+
+## Top 20 common words in songs
+
+.pull-left[
+.small[
+```{r message=FALSE}
+top20_songs <- listening %>%
+  unnest_tokens(word, songs) %>%
+  anti_join(stop_words) %>%
+  filter(
+    !(word %in% c("1", "2", "3", "4", "5"))
+    ) %>%
+  count(word) %>%
+  top_n(20)
+```
+]
+]
+.pull-right[
+.midi[
+```{r}
+top20_songs %>%
+  arrange(desc(n))
+```
+]
+]
+---
+
+## Visualizing commonalities: bar chart
+
+.midi[
+```{r echo=FALSE}
+top20_songs %>%
+  ggplot(aes(x = fct_reorder(word, n), y = n)) +
+  geom_col() +
+  labs(x = "Common words", y = "Count") +
+  coord_flip()
+```
+]
+
+---
+
+... the code
+
+```{r eval=FALSE}
+ggplot(top20_songs, aes(x = fct_reorder(word, n), y = n)) +
+  geom_col() +
+  labs(x = "Common words", y = "Count") +
+  coord_flip()
+```
+
+
+---
+
+## Visualizing commonalities: wordcloud
+
+```{r echo=FALSE, out.width="80%"}
+set.seed(1234)
+wordcloud(words = top20_songs$word, 
+          freq = top20_songs$n, 
+          colors = brewer.pal(5,"Blues"),
+          random.order = FALSE, 
+          rot.per = 0.35,
+          scale = c(2, 0.5))
+```
+
+---
+
+... and the code
+
+```{r eval=FALSE}
+set.seed(1234)
+wordcloud(words = top20_songs$word, 
+          freq = top20_songs$n, 
+          colors = brewer.pal(5,"Blues"),
+          random.order = FALSE)
+```
+
+---
+
+## Ok, so people like Ed Sheeran!
+
+```{r}
+str_subset(listening$songs, "Sheeran")
+```
+
+---
+
+## But I had to ask...
+
+--
+
+What is 1975?
+
+--
+
+```{r}
+str_subset(listening$songs, "1975")
+```

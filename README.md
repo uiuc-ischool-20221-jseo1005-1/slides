@@ -26,6 +26,8 @@
 
 * [Week 7-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week7-02-studies-confounding).
 
+* [Week 7-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week8-01-text-analysis).
+
 
 ## Dev Toolkit Notes
 
