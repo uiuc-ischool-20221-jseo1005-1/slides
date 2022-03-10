@@ -28,6 +28,11 @@
 
 * [Week 7-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week8-01-text-analysis).
 
+* [Week 8-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week8-01-basic-text-analysis).
+
+* [Week 8-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week8-02-functions+iteration).
+
+
 
 ## Dev Toolkit Notes
 
