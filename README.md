@@ -32,6 +32,7 @@
 
 * [Week 8-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week8-02-functions+iteration).
 
+* [Week 10-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week10-01-language-of-models).
 
 
 ## Dev Toolkit Notes
