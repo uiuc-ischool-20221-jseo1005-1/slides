@@ -34,6 +34,8 @@
 
 * [Week 10-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week10-01-language-of-models).
 
+* [Week 10-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week10-02-modeling-nonlinear-relationships).
+
 
 ## Dev Toolkit Notes
 
