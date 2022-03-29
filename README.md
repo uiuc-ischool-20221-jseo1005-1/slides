@@ -36,6 +36,8 @@
 
 * [Week 10-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week10-02-modeling-nonlinear-relationships).
 
+* [Week 11-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week11-01-model-multiple-predictors).
+
 
 ## Dev Toolkit Notes
 
