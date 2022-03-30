@@ -38,6 +38,8 @@
 
 * [Week 11-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week11-01-model-multiple-predictors).
 
+* [Week 11-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week11-02-logistic-reg+feature_eng).
+
 
 ## Dev Toolkit Notes
 
