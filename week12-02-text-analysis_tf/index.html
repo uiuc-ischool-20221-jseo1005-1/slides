@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Text analysis</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="JooYoung Seo" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/font-awesome/css/all.css" rel="stylesheet" />
+    <link href="libs/font-awesome/css/v4-shims.css" rel="stylesheet" />
+    <link href="libs/panelset/panelset.css" rel="stylesheet" />
+    <script src="libs/panelset/panelset.js"></script>
+    <script src="libs/tone/Tone.js"></script>
+    <script src="libs/slide-tone/slide-tone.js"></script>
+    <link rel="stylesheet" href="../xaringan-themer.css" type="text/css" />
+    <link rel="stylesheet" href="../slides.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Text analysis
+]
+.subtitle[
+## <br><br> IS 407
+]
+.author[
+### JooYoung Seo
+]
+
+---
+
+
+
+
+
+
+
+
+class: middle
+
+# Tidytext analysis
+
+---
+
+## Tidytext
+
+.pull-left[
+- Using tidy data principles can make many text mining tasks easier, more effective, and consistent with tools already in wide use
+- Learn more at [tidytextmining.com](https://www.tidytextmining.com/)
+]
+.pull-right[
+&lt;img src="img/tidytext.png" width="60%" style="display: block; margin: auto auto auto 0;" /&gt;
+]
+
+---
+
+## What is tidy text?
+
+.pull-left-wide[
+.small[
+
+```r
+text &lt;- c(
+  "Oh! Get me away from here, I'm dying",
+  "Play me a song to set me free",
+  "Nobody writes them like they used to",
+  "So it may as well be me",
+  "Here on my own now after hours",
+  "Here on my own now on a bus",
+  "Think of it this way",
+  "You could either be successful or be us",
+  "With our winning smiles, and us",
+  "With our catchy tunes or worse",
+  "Now we're photogenic",
+  "You know, we don't stand a chance"
+)
+
+text
+```
+
+```
+##  [1] "Oh! Get me away from here, I'm dying"   
+##  [2] "Play me a song to set me free"          
+##  [3] "Nobody writes them like they used to"   
+##  [4] "So it may as well be me"                
+##  [5] "Here on my own now after hours"         
+##  [6] "Here on my own now on a bus"            
+##  [7] "Think of it this way"                   
+##  [8] "You could either be successful or be us"
+##  [9] "With our winning smiles, and us"        
+## [10] "With our catchy tunes or worse"         
+## [11] "Now we're photogenic"                   
+## [12] "You know, we don't stand a chance"
+```
+]
+]
+
+---
+
+## What is tidy text?
+
+
+```r
+text_df &lt;- tibble(line = 1:12, text = text)
+
+text_df %&gt;% print(n = 12)
+```
+
+```
+## # A tibble: 12 x 2
+##     line text                                   
+##    &lt;int&gt; &lt;chr&gt;                                  
+##  1     1 Oh! Get me away from here, I'm dying   
+##  2     2 Play me a song to set me free          
+##  3     3 Nobody writes them like they used to   
+##  4     4 So it may as well be me                
+##  5     5 Here on my own now after hours         
+##  6     6 Here on my own now on a bus            
+##  7     7 Think of it this way                   
+##  8     8 You could either be successful or be us
+##  9     9 With our winning smiles, and us        
+## 10    10 With our catchy tunes or worse         
+## 11    11 Now we're photogenic                   
+## 12    12 You know, we don't stand a chance
+```
+
+---
+
+## What is tidy text?
+
+
+```r
+text_df %&gt;%
+  unnest_tokens(word, text) %&gt;%
+  print(n = 10)
+```
+
+```
+## # A tibble: 80 x 2
+##     line word 
+##    &lt;int&gt; &lt;chr&gt;
+##  1     1 oh   
+##  2     1 get  
+##  3     1 me   
+##  4     1 away 
+##  5     1 from 
+##  6     1 here 
+##  7     1 i'm  
+##  8     1 dying
+##  9     2 play 
+## 10     2 me   
+## # ... with 70 more rows
+```
+
+---
+
+class: middle
+
+# Case study: Analyzing Jane Austen's novels
+
+.footnote[
+Source: [**Text Mining with R** Ch1](http://tidytextmining.com/), by Julia Silge and David Robinson.
+]
+
+---
+
+## Data wrangling
+
+
+```r
+library(tidyverse)
+library(tidytext)
+library(janeaustenr)
+
+original_books &lt;- austen_books() %&gt;%
+  group_by(book) %&gt;%
+  mutate(
+    linenumber = row_number(),
+    chapter = cumsum(str_detect(
+      text,
+      regex("^chapter [\\divxlc]",
+        ignore_case = TRUE
+      )
+    ))
+  ) %&gt;%
+  ungroup()
+
+original_books
+```
+
+```
+## # A tibble: 73,422 x 4
+##   text                    book                linenumber chapter
+##   &lt;chr&gt;                   &lt;fct&gt;                    &lt;int&gt;   &lt;int&gt;
+## 1 "SENSE AND SENSIBILITY" Sense &amp; Sensibility          1       0
+## 2 ""                      Sense &amp; Sensibility          2       0
+## 3 "by Jane Austen"        Sense &amp; Sensibility          3       0
+## 4 ""                      Sense &amp; Sensibility          4       0
+## 5 "(1811)"                Sense &amp; Sensibility          5       0
+## 6 ""                      Sense &amp; Sensibility          6       0
+## # ... with 73,416 more rows
+```
+
+---
+
+## Tokenization
+
+
+```r
+tidy_books &lt;- original_books %&gt;%
+  unnest_tokens(word, text)
+
+tidy_books
+```
+
+```
+## # A tibble: 725,055 x 4
+##   book                linenumber chapter word       
+##   &lt;fct&gt;                    &lt;int&gt;   &lt;int&gt; &lt;chr&gt;      
+## 1 Sense &amp; Sensibility          1       0 sense      
+## 2 Sense &amp; Sensibility          1       0 and        
+## 3 Sense &amp; Sensibility          1       0 sensibility
+## 4 Sense &amp; Sensibility          3       0 by         
+## 5 Sense &amp; Sensibility          3       0 jane       
+## 6 Sense &amp; Sensibility          3       0 austen     
+## # ... with 725,049 more rows
+```
+
+---
+
+## Word count
+
+
+```r
+tidy_books %&gt;%
+  count(word, sort = TRUE)
+```
+
+```
+## # A tibble: 14,520 x 2
+##   word      n
+##   &lt;chr&gt; &lt;int&gt;
+## 1 the   26351
+## 2 to    24044
+## 3 and   22515
+## 4 of    21178
+## 5 a     13408
+## 6 her   13055
+## # ... with 14,514 more rows
+```
+
+---
+
+## Stopwords
+
+
+```r
+stop_words
+```
+
+```
+## # A tibble: 1,149 x 2
+##   word      lexicon
+##   &lt;chr&gt;     &lt;chr&gt;  
+## 1 a         SMART  
+## 2 a's       SMART  
+## 3 able      SMART  
+## 4 about     SMART  
+## 5 above     SMART  
+## 6 according SMART  
+## # ... with 1,143 more rows
+```
+
+---
+
+## Removing stopwords
+
+
+```r
+tidy_books &lt;- tidy_books %&gt;%
+  anti_join(stop_words)
+```
+
+---
+
+## Word count: The most common words in all the books as a whole
+
+
+```r
+tidy_books %&gt;%
+  count(word, sort = TRUE)
+```
+
+```
+## # A tibble: 13,914 x 2
+##   word      n
+##   &lt;chr&gt; &lt;int&gt;
+## 1 miss   1855
+## 2 time   1337
+## 3 fanny   862
+## 4 dear    822
+## 5 lady    817
+## 6 sir     806
+## # ... with 13,908 more rows
+```
+
+---
+
+## Visualization of the most common words 
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="index_files/figure-html/unnamed-chunk-9-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+]
+.panel[.panel-name[Code]
+
+
+```r
+tidy_books %&gt;%
+  count(word, sort = TRUE) %&gt;%
+  filter(n &gt; 600) %&gt;%
+  mutate(word = reorder(word, n)) %&gt;%
+  ggplot(aes(n, word)) +
+  geom_col() +
+  labs(y = NULL)
+```
+
+]
+]
+
+---
+
+## H.G. Wells science fiction and fantasy novels
+
+.pull-left[
+
+- [*The Time Machine*](https://www.gutenberg.org/ebooks/35).
+
+- [*The War of the Worlds*](https://www.gutenberg.org/ebooks/36).
+
+- [*The Invisible Man*](https://www.gutenberg.org/ebooks/5230).
+
+- [*The Island of Doctor Moreau*](https://www.gutenberg.org/ebooks/159).
+
+]
+
+.pull-right[
+
+```r
+library(gutenbergr)
+
+hgwells &lt;- gutenberg_download(c(35, 36, 5230, 159))
+```
+]
+
+---
+
+## Tidying + stopword removal
+
+
+```r
+tidy_hgwells &lt;- hgwells %&gt;%
+  unnest_tokens(word, text) %&gt;%
+  anti_join(stop_words)
+```
+
+---
+
+## The most common words in these novels of H.G. Wells?
+
+
+```r
+tidy_hgwells %&gt;%
+  count(word, sort = TRUE)
+```
+
+```
+## # A tibble: 11,811 x 2
+##   word       n
+##   &lt;chr&gt;  &lt;int&gt;
+## 1 time     461
+## 2 people   302
+## 3 door     260
+## 4 heard    249
+## 5 black    232
+## 6 stood    229
+## # ... with 11,805 more rows
+```
+
+---
+
+
+## Download some works of the Brontë sisters, whose lives overlapped with Jane Austen's somewhat but who wrote in a rather different style
+
+
+```r
+bronte &lt;- gutenberg_download(c(1260, 768, 969, 9182, 767))
+```
+
+---
+
+## Tidying + stopwords removal
+
+
+```r
+tidy_bronte &lt;- bronte %&gt;%
+  unnest_tokens(word, text) %&gt;%
+  anti_join(stop_words)
+```
+
+---
+
+## The most common words in these novels of the Brontë sisters?
+
+
+```r
+tidy_bronte %&gt;%
+  count(word, sort = TRUE)
+```
+
+```
+## # A tibble: 23,297 x 2
+##   word      n
+##   &lt;chr&gt; &lt;int&gt;
+## 1 time   1065
+## 2 miss    854
+## 3 day     825
+## 4 hand    767
+## 5 eyes    714
+## 6 don’t   666
+## # ... with 23,291 more rows
+```
+
+---
+
+## Compare the frequency for each word for the works of Jane Austen, the Brontë sisters, and H.G. Wells 
+
+.panelset[
+.panel[.panel-name[Output]
+
+```
+## # A tibble: 57,116 x 4
+##   word  `Jane Austen` author          proportion
+##   &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt;                &lt;dbl&gt;
+## 1 a        0.00000919 Brontë Sisters  0.0000587 
+## 2 a        0.00000919 H.G. Wells      0.0000147 
+## 3 aback   NA          Brontë Sisters  0.00000391
+## 4 aback   NA          H.G. Wells      0.0000147 
+## 5 abaht   NA          Brontë Sisters  0.00000391
+## 6 abaht   NA          H.G. Wells     NA         
+## # ... with 57,110 more rows
+```
+]
+.panel[.panel-name[Code]
+
+```r
+frequency &lt;- bind_rows(
+  mutate(tidy_bronte, author = "Brontë Sisters"),
+  mutate(tidy_hgwells, author = "H.G. Wells"),
+  mutate(tidy_books, author = "Jane Austen")
+) %&gt;%
+  mutate(word = str_extract(word, "[a-z']+")) %&gt;%
+  count(author, word) %&gt;%
+  group_by(author) %&gt;%
+  mutate(proportion = n / sum(n)) %&gt;%
+  select(-n) %&gt;%
+  pivot_wider(names_from = author, values_from = proportion) %&gt;%
+  pivot_longer(`Brontë Sisters`:`H.G. Wells`,
+    names_to = "author", values_to = "proportion"
+  )
+
+frequency
+```
+]
+]
+
+---
+
+## Visualization: Compare the word frequencies for the works of Jane Austen, the Brontë sisters, and H.G. Wells 
+
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="index_files/figure-html/unnamed-chunk-15-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+]
+.panel[.panel-name[Code]
+
+
+```r
+library(scales)
+
+# expect a warning about rows with missing values being removed
+ggplot(frequency, aes(
+  x = proportion, y = `Jane Austen`,
+  color = abs(`Jane Austen` - proportion)
+)) +
+  geom_abline(color = "gray40", lty = 2) +
+  geom_jitter(alpha = 0.1, size = 2.5, width = 0.3, height = 0.3) +
+  geom_text(aes(label = word), check_overlap = TRUE, vjust = 1.5) +
+  scale_x_log10(labels = percent_format()) +
+  scale_y_log10(labels = percent_format()) +
+  scale_color_gradient(
+    limits = c(0, 0.001),
+    low = "darkslategray4", high = "gray75"
+  ) +
+  facet_wrap(~author, ncol = 2) +
+  theme(legend.position = "none") +
+  labs(y = "Jane Austen", x = NULL)
+```
+
+```
+## Warning: Removed 40758 rows containing missing values
+## (geom_point).
+```
+
+```
+## Warning: Removed 40760 rows containing missing values
+## (geom_text).
+```
+
+]
+]
+
+
+---
+
+## Correlation test: quantify how similar and different these sets of word frequencies are
+
+### Brontë Sisters vs. Jane Austen
+
+.panelset[
+.panel[.panel-name[Output]
+
+```
+## 
+## 	Pearson's product-moment correlation
+## 
+## data:  proportion and Jane Austen
+## t = 111.06, df = 10346, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.7285370 0.7461189
+## sample estimates:
+##       cor 
+## 0.7374529
+```
+]
+.panel[.panel-name[Code]
+
+```r
+cor.test(
+  data = frequency[frequency$author == "Brontë Sisters", ],
+  ~ proportion + `Jane Austen`
+)
+```
+]
+]
+
+---
+
+## Correlation test: quantify how similar and different these sets of word frequencies are
+
+### H.G. Wells vs. Jane Austen
+
+.panelset[
+.panel[.panel-name[Output]
+
+```
+## 
+## 	Pearson's product-moment correlation
+## 
+## data:  proportion and Jane Austen
+## t = 35.229, df = 6008, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.3925914 0.4345047
+## sample estimates:
+##       cor 
+## 0.4137673
+```
+]
+.panel[.panel-name[Code]
+
+```r
+cor.test(
+  data = frequency[frequency$author == "H.G. Wells", ],
+  ~ proportion + `Jane Austen`
+)
+```
+]
+]
+
+---
+
+## What is a document about?
+
+- Term frequency
+- Inverse document frequency
+
+`$$idf(\text{term}) = \ln{\left(\frac{n_{\text{documents}}}{n_{\text{documents containing term}}}\right)}$$`
+
+tf-idf is about comparing **documents** within a **collection**
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightLines": true,
+"highlightStyle": "solarized-light",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

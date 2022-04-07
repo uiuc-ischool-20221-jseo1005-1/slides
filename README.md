@@ -40,6 +40,8 @@
 
 * [Week 11-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week11-02-logistic-reg+feature_eng).
 
+* [Week 12-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week12-02-text-analysis_tf).
+
 
 ## Dev Toolkit Notes
 
