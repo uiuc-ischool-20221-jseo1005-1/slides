@@ -1,0 +1,592 @@
+---
+title: "Text Analysis: TF_IDF and Sentimental Analysis"
+subtitle: "<br><br> IS 407"
+author: "JooYoung Seo"
+output:
+  xaringan::moon_reader:
+    css: ["../xaringan-themer.css", "../slides.css"]
+    lib_dir: libs
+    anchor_sections: FALSE
+    nature:
+      ratio: "16:9"
+      highlightLines: true
+      highlightStyle: solarized-light
+      countIncrementalSlides: false
+---
+
+```{r child = "../setup.Rmd"}
+```
+
+```{r packages, echo = FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(tidytext)
+```
+
+class: middle
+
+# Tidytext analysis
+
+---
+
+## Tidytext
+
+.pull-left[
+- Using tidy data principles can make many text mining tasks easier, more effective, and consistent with tools already in wide use
+- Learn more at [tidytextmining.com](https://www.tidytextmining.com/)
+]
+.pull-right[
+```{r echo=FALSE, fig.align = "left"}
+knitr::include_graphics("img/tidytext.png")
+```
+]
+
+---
+
+## What is tidy text?
+
+.pull-left-wide[
+.small[
+```{r}
+text <- c(
+  "Oh! Get me away from here, I'm dying",
+  "Play me a song to set me free",
+  "Nobody writes them like they used to",
+  "So it may as well be me",
+  "Here on my own now after hours",
+  "Here on my own now on a bus",
+  "Think of it this way",
+  "You could either be successful or be us",
+  "With our winning smiles, and us",
+  "With our catchy tunes or worse",
+  "Now we're photogenic",
+  "You know, we don't stand a chance"
+)
+
+text
+```
+]
+]
+
+---
+
+## What is tidy text?
+
+```{r}
+text_df <- tibble(line = 1:12, text = text)
+
+text_df %>% print(n = 12)
+```
+
+---
+
+## What is tidy text?
+
+```{r}
+text_df %>%
+  unnest_tokens(word, text) %>%
+  print(n = 10)
+```
+
+---
+
+class: middle
+
+# Measure of word importance
+
+---
+
+## What is a document about?
+
+- Term frequency (TF).
+- Inverse document frequency (IDF): decreases the weight for commonly used words and increases the weight for words that are not used very much in a collection of documents.
+
+$$idf(\text{term}) = \ln{\left(\frac{n_{\text{documents}}}{n_{\text{documents containing term}}}\right)}$$
+
+- tf-idf:
+
+  - the frequency of a term adjusted for how rarely it is used.
+
+  - about comparing **documents** within a **collection**.
+
+  - measure how important a word is to a document in a collection (or corpus) of documents.
+
+---
+
+class: middle
+
+# Case study: term frequency in Jane Austen's novels
+
+---
+
+## What are the most commonly used words in Jane Austen's novels?
+
+.panelset[
+.panel[.panel-name[Output]
+```{r ref.label = "book_words", echo = FALSE, warning = FALSE}
+```
+]
+.panel[.panel-name[Code]
+```{r book_words, results = "hide"}
+library(tidyverse)
+library(janeaustenr)
+library(tidytext)
+
+book_words <- austen_books() %>%
+  unnest_tokens(word, text) %>%
+  count(book, word, sort = TRUE)
+
+total_words <- book_words %>%
+  group_by(book) %>%
+  summarize(total = sum(n))
+
+book_words <- left_join(book_words, total_words)
+
+book_words
+```
+]
+]
+
+---
+
+## TF distribution
+
+.panelset[
+.panel[.panel-name[Plot]
+```{r ref.label = "plottf", echo = FALSE, warning = FALSE, out.width = "70%", fig.width = 8}
+```
+]
+.panel[.panel-name[Code]
+
+```{r plottf, fig.show = "hide", fig.alt="Term frequency distribution in Jane Austen's novels"}
+ggplot(book_words, aes(x = n / total, fill = book)) +
+  geom_histogram(show.legend = FALSE) +
+  xlim(NA, 0.0009) +
+  facet_wrap(~book, ncol = 2, scales = "free_y")
+```
+
+]
+]
+
+---
+
+.panelset[
+.panel[.panel-name[Output]
+```{r ref.label = "freq_by_rank", echo = FALSE, warning = FALSE}
+```
+]
+.panel[.panel-name[Code]
+```{r freq_by_rank, results = "hide"}
+freq_by_rank <- book_words %>%
+  group_by(book) %>%
+  mutate(
+    rank = row_number(),
+    `term frequency` = n / total
+  ) %>%
+  ungroup()
+
+freq_by_rank
+```
+
+]
+]
+
+---
+
+## Zipf's law
+
+.panelset[
+.panel[.panel-name[Plot]
+```{r ref.label = "zipf", echo = FALSE, warning = FALSE, out.width = "70%", fig.width = 8}
+```
+]
+.panel[.panel-name[Code]
+
+```{r zipf, fig.show = "hide"}
+freq_by_rank %>%
+  ggplot(aes(rank, `term frequency`, color = book)) +
+  geom_line(size = 1.1, alpha = 0.8, show.legend = FALSE) +
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+]
+]
+
+---
+
+## tf_idf
+
+- The important words for the content of each document by decreasing the weight for commonly used words and increasing the weight for words that are not used very much in a collection of documents.
+
+- `bind_tf_idf()`:
+
+  - `tbl`: one_row_per_term tidy data frame.
+  
+  - `term`: token (e.g., word).
+  
+  - `document`: book in this case.
+  
+  - `n`: how many times each document contains each term.
+
+---
+
+## tf_idf
+
+.panelset[
+.panel[.panel-name[Output]
+```{r ref.label = "tf_idf", echo = FALSE, warning = FALSE}
+```
+]
+.panel[.panel-name[Code]
+```{r tf_idf, results = "hide"}
+book_tf_idf <- book_words %>%
+  bind_tf_idf(word, book, n)
+
+book_tf_idf
+```
+
+]
+]
+
+---
+
+## Highest tf-idf words in each Jane Austen novel
+
+.panelset[
+.panel[.panel-name[Plot]
+```{r ref.label = "plotseparate", echo = FALSE, warning = FALSE, out.width = "70%", fig.width = 8}
+```
+]
+.panel[.panel-name[Code]
+
+```{r plotseparate, fig.show = "hide"}
+book_tf_idf %>%
+  group_by(book) %>%
+  slice_max(tf_idf, n = 15) %>%
+  ungroup() %>%
+  ggplot(aes(tf_idf, fct_reorder(word, tf_idf), fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~book, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+```
+
+
+]
+]
+
+---
+
+class: middle
+
+# Case study 2: A corpus of physics texts
+
+---
+
+## Data preparation
+
+```{r}
+library(gutenbergr)
+
+physics <- gutenberg_download(c(37729, 14725, 13476, 30155),
+  meta_fields = "author"
+)
+```
+
+---
+
+## How many times each word was used in each text of the authors?
+
+.panelset[
+.panel[.panel-name[Output]
+```{r ref.label = "physics_words", echo = FALSE, warning = FALSE}
+```
+]
+.panel[.panel-name[Code]
+```{r physics_words, results = "hide"}
+physics_words <- physics %>%
+  unnest_tokens(word, text) %>%
+  count(author, word, sort = TRUE)
+
+physics_words
+```
+
+]
+]
+
+---
+
+## Highest tf_idf words in each physics texts
+
+.panelset[
+.panel[.panel-name[Output]
+```{r ref.label = "physicsseparate-tfidf", echo = FALSE, warning = FALSE}
+```
+]
+.panel[.panel-name[Code]
+```{r physicsseparate-tfidf, results = "hide"}
+plot_physics <- physics_words %>%
+  bind_tf_idf(word, author, n) %>%
+  mutate(author = factor(author, levels = c(
+    "Galilei, Galileo",
+    "Huygens, Christiaan",
+    "Tesla, Nikola",
+    "Einstein, Albert"
+  )))
+
+plot_physics
+```
+]
+]
+
+---
+
+## Highest tf_idf words in each physics texts
+
+.panelset[
+.panel[.panel-name[Plot]
+```{r ref.label = "physicsseparate", echo = FALSE, warning = FALSE, out.width = "70%", fig.width = 8}
+```
+]
+.panel[.panel-name[Code]
+
+```{r physicsseparate, fig.show = "hide"}
+plot_physics %>%
+  group_by(author) %>%
+  slice_max(tf_idf, n = 15) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, tf_idf)) %>%
+  ggplot(aes(tf_idf, word, fill = author)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = "tf-idf", y = NULL) +
+  facet_wrap(~author, ncol = 2, scales = "free")
+```
+
+
+
+]
+]
+
+
+
+---
+
+## Text cleaning
+
+```{r}
+physics %>%
+  filter(str_detect(text, "_k_")) %>%
+  select(text)
+```
+
+---
+
+## Text cleaning
+
+```{r}
+physics %>%
+  filter(str_detect(text, "RC")) %>%
+  select(text)
+```
+
+---
+
+## Text cleaning: custom stop_words dictionary
+
+```{r mystopwords}
+mystopwords <- tibble(word = c(
+  "eq", "co", "rc", "ac", "ak", "bn",
+  "fig", "file", "cg", "cb", "cm",
+  "ab", "_k", "_k_", "_x"
+))
+
+mystopwords
+
+physics_words <- anti_join(physics_words, mystopwords,
+  by = "word"
+)
+
+physics_words
+```
+
+---
+
+## Calculate tf_idf again
+
+.panelset[
+.panel[.panel-name[Output]
+```{r ref.label = "physics-tfidf2", echo = FALSE, warning = FALSE}
+```
+]
+.panel[.panel-name[Code]
+```{r physics-tfidf2, results = "hide"}
+plot_physics <- physics_words %>%
+  bind_tf_idf(word, author, n) %>%
+  mutate(word = str_remove_all(word, "_")) %>%
+  group_by(author) %>%
+  slice_max(tf_idf, n = 15) %>%
+  ungroup() %>%
+  mutate(word = fct_reorder(word, tf_idf)) %>%
+  mutate(author = factor(author, levels = c(
+    "Galilei, Galileo",
+    "Huygens, Christiaan",
+    "Tesla, Nikola",
+    "Einstein, Albert"
+  )))
+
+plot_physics
+```
+]
+]
+
+---
+
+## Visualize tf_idf again
+
+.panelset[
+.panel[.panel-name[Plot]
+```{r ref.label = "physics-tfidf-viz", echo = FALSE, warning = FALSE, out.width = "70%", fig.width = 8}
+```
+]
+.panel[.panel-name[Code]
+
+```{r physics-tfidf-viz, fig.show = "hide"}
+ggplot(plot_physics, aes(tf_idf, word, fill = author)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~author, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+```
+
+]
+]
+
+---
+
+class: middle
+
+# Sentiment analysis
+
+---
+
+## Dictionary-based approach
+
+- Compare each word with sentiment lexicons.
+
+- Three general-purpose lexicons:
+
+  * `AFINN` from [Finn Årup Nielsen](http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6010)
+  * `bing` from [Bing Liu and collaborators](https://www.cs.uic.edu/~liub/FBS/sentiment-analysis.html)
+  * `nrc` from [Saif Mohammad and Peter Turney](http://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm)
+
+---
+
+## Sentiment lexicons: afinn
+
+```{r}
+library(tidytext)
+
+get_sentiments("afinn")
+```
+
+---
+
+## Sentiment lexicons: bing
+
+```{r}
+get_sentiments("bing")
+```
+
+---
+
+## Sentiment lexicons: nrc
+
+```{r}
+get_sentiments("nrc")
+```
+
+---
+
+class: middle
+
+# Case study: sentiment analysis for Jane Austen's books
+
+---
+
+## Preparing data
+
+.panelset[
+.panel[.panel-name[Output]
+```{r ref.label = "tidy_books", echo = FALSE, warning = FALSE}
+```
+]
+.panel[.panel-name[Code]
+```{r tidy_books, results = "hide"}
+library(tidytext)
+library(tidyverse)
+library(janeaustenr)
+
+tidy_books <- austen_books() %>%
+  group_by(book) %>%
+  mutate(
+    linenumber = row_number(),
+    chapter = cumsum(str_detect(
+      text,
+      regex("^chapter [\\divxlc]",
+        ignore_case = TRUE
+      )
+    ))
+  ) %>%
+  ungroup() %>%
+  unnest_tokens(word, text)
+
+tidy_books
+```
+
+
+]
+]
+
+
+---
+
+## Joining sentiments
+
+.panelset[
+.panel[.panel-name[Output]
+```{r ref.label = "janeaustensentiment", echo = FALSE, warning = FALSE}
+```
+]
+.panel[.panel-name[Code]
+```{r janeaustensentiment, results = "hide"}
+jane_austen_sentiment <- tidy_books %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(book, index = linenumber %/% 80, sentiment) %>%
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %>%
+  mutate(sentiment = positive - negative)
+
+jane_austen_sentiment
+```
+
+]
+]
+
+---
+
+## Visualizing sentiment plot
+
+.panelset[
+.panel[.panel-name[Plot]
+```{r ref.label = "sentimentplot", echo = FALSE, warning = FALSE, out.width = "70%", fig.width = 8}
+```
+]
+.panel[.panel-name[Code]
+
+```{r sentimentplot, fig.show = "hide"}
+ggplot(jane_austen_sentiment, aes(index, sentiment, fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~book, ncol = 2, scales = "free_x")
+```
+
+
+]
+]
+

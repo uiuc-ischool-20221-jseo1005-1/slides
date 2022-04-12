@@ -42,6 +42,8 @@
 
 * [Week 12-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week12-02-text-analysis_tf).
 
+* [Week 13-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week13-01-text-analysis_tfidf+sentimentanal).
+
 
 ## Dev Toolkit Notes
 

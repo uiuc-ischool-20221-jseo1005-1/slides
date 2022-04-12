@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Text Analysis: TF_IDF and Sentimental Analysis</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="JooYoung Seo" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/font-awesome/css/all.css" rel="stylesheet" />
+    <link href="libs/font-awesome/css/v4-shims.css" rel="stylesheet" />
+    <link href="libs/panelset/panelset.css" rel="stylesheet" />
+    <script src="libs/panelset/panelset.js"></script>
+    <script src="libs/tone/Tone.js"></script>
+    <script src="libs/slide-tone/slide-tone.js"></script>
+    <link rel="stylesheet" href="../xaringan-themer.css" type="text/css" />
+    <link rel="stylesheet" href="../slides.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Text Analysis: TF_IDF and Sentimental Analysis
+]
+.subtitle[
+## <br><br> IS 407
+]
+.author[
+### JooYoung Seo
+]
+
+---
+
+
+
+
+
+
+
+
+class: middle
+
+# Tidytext analysis
+
+---
+
+## Tidytext
+
+.pull-left[
+- Using tidy data principles can make many text mining tasks easier, more effective, and consistent with tools already in wide use
+- Learn more at [tidytextmining.com](https://www.tidytextmining.com/)
+]
+.pull-right[
+&lt;img src="img/tidytext.png" width="60%" style="display: block; margin: auto auto auto 0;" /&gt;
+]
+
+---
+
+## What is tidy text?
+
+.pull-left-wide[
+.small[
+
+```r
+text &lt;- c(
+  "Oh! Get me away from here, I'm dying",
+  "Play me a song to set me free",
+  "Nobody writes them like they used to",
+  "So it may as well be me",
+  "Here on my own now after hours",
+  "Here on my own now on a bus",
+  "Think of it this way",
+  "You could either be successful or be us",
+  "With our winning smiles, and us",
+  "With our catchy tunes or worse",
+  "Now we're photogenic",
+  "You know, we don't stand a chance"
+)
+
+text
+```
+
+```
+##  [1] "Oh! Get me away from here, I'm dying"   
+##  [2] "Play me a song to set me free"          
+##  [3] "Nobody writes them like they used to"   
+##  [4] "So it may as well be me"                
+##  [5] "Here on my own now after hours"         
+##  [6] "Here on my own now on a bus"            
+##  [7] "Think of it this way"                   
+##  [8] "You could either be successful or be us"
+##  [9] "With our winning smiles, and us"        
+## [10] "With our catchy tunes or worse"         
+## [11] "Now we're photogenic"                   
+## [12] "You know, we don't stand a chance"
+```
+]
+]
+
+---
+
+## What is tidy text?
+
+
+```r
+text_df &lt;- tibble(line = 1:12, text = text)
+
+text_df %&gt;% print(n = 12)
+```
+
+```
+## # A tibble: 12 x 2
+##     line text                                   
+##    &lt;int&gt; &lt;chr&gt;                                  
+##  1     1 Oh! Get me away from here, I'm dying   
+##  2     2 Play me a song to set me free          
+##  3     3 Nobody writes them like they used to   
+##  4     4 So it may as well be me                
+##  5     5 Here on my own now after hours         
+##  6     6 Here on my own now on a bus            
+##  7     7 Think of it this way                   
+##  8     8 You could either be successful or be us
+##  9     9 With our winning smiles, and us        
+## 10    10 With our catchy tunes or worse         
+## 11    11 Now we're photogenic                   
+## 12    12 You know, we don't stand a chance
+```
+
+---
+
+## What is tidy text?
+
+
+```r
+text_df %&gt;%
+  unnest_tokens(word, text) %&gt;%
+  print(n = 10)
+```
+
+```
+## # A tibble: 80 x 2
+##     line word 
+##    &lt;int&gt; &lt;chr&gt;
+##  1     1 oh   
+##  2     1 get  
+##  3     1 me   
+##  4     1 away 
+##  5     1 from 
+##  6     1 here 
+##  7     1 i'm  
+##  8     1 dying
+##  9     2 play 
+## 10     2 me   
+## # ... with 70 more rows
+```
+
+---
+
+class: middle
+
+# Measure of word importance
+
+---
+
+## What is a document about?
+
+- Term frequency (TF).
+- Inverse document frequency (IDF): decreases the weight for commonly used words and increases the weight for words that are not used very much in a collection of documents.
+
+`$$idf(\text{term}) = \ln{\left(\frac{n_{\text{documents}}}{n_{\text{documents containing term}}}\right)}$$`
+
+- tf-idf:
+
+  - the frequency of a term adjusted for how rarely it is used.
+
+  - about comparing **documents** within a **collection**.
+
+  - measure how important a word is to a document in a collection (or corpus) of documents.
+
+---
+
+class: middle
+
+# Case study: term frequency in Jane Austen's novels
+
+---
+
+## What are the most commonly used words in Jane Austen's novels?
+
+.panelset[
+.panel[.panel-name[Output]
+
+```
+## # A tibble: 40,379 x 4
+##   book           word      n  total
+##   &lt;fct&gt;          &lt;chr&gt; &lt;int&gt;  &lt;int&gt;
+## 1 Mansfield Park the    6206 160460
+## 2 Mansfield Park to     5475 160460
+## 3 Mansfield Park and    5438 160460
+## 4 Emma           to     5239 160996
+## 5 Emma           the    5201 160996
+## 6 Emma           and    4896 160996
+## # ... with 40,373 more rows
+```
+]
+.panel[.panel-name[Code]
+
+```r
+library(tidyverse)
+library(janeaustenr)
+library(tidytext)
+
+book_words &lt;- austen_books() %&gt;%
+  unnest_tokens(word, text) %&gt;%
+  count(book, word, sort = TRUE)
+
+total_words &lt;- book_words %&gt;%
+  group_by(book) %&gt;%
+  summarize(total = sum(n))
+
+book_words &lt;- left_join(book_words, total_words)
+
+book_words
+```
+]
+]
+
+---
+
+## TF distribution
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="index_files/figure-html/unnamed-chunk-7-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+]
+.panel[.panel-name[Code]
+
+
+```r
+ggplot(book_words, aes(x = n / total, fill = book)) +
+  geom_histogram(show.legend = FALSE) +
+  xlim(NA, 0.0009) +
+  facet_wrap(~book, ncol = 2, scales = "free_y")
+```
+
+```
+## Warning: Removed 896 rows containing non-finite values
+## (stat_bin).
+```
+
+```
+## Warning: Removed 6 rows containing missing values (geom_bar).
+```
+
+]
+]
+
+---
+
+.panelset[
+.panel[.panel-name[Output]
+
+```
+## # A tibble: 40,379 x 6
+##   book           word      n  total  rank `term frequency`
+##   &lt;fct&gt;          &lt;chr&gt; &lt;int&gt;  &lt;int&gt; &lt;int&gt;            &lt;dbl&gt;
+## 1 Mansfield Park the    6206 160460     1           0.0387
+## 2 Mansfield Park to     5475 160460     2           0.0341
+## 3 Mansfield Park and    5438 160460     3           0.0339
+## 4 Emma           to     5239 160996     1           0.0325
+## 5 Emma           the    5201 160996     2           0.0323
+## 6 Emma           and    4896 160996     3           0.0304
+## # ... with 40,373 more rows
+```
+]
+.panel[.panel-name[Code]
+
+```r
+freq_by_rank &lt;- book_words %&gt;%
+  group_by(book) %&gt;%
+  mutate(
+    rank = row_number(),
+    `term frequency` = n / total
+  ) %&gt;%
+  ungroup()
+
+freq_by_rank
+```
+
+]
+]
+
+---
+
+## Zipf's law
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="index_files/figure-html/unnamed-chunk-9-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+]
+.panel[.panel-name[Code]
+
+
+```r
+freq_by_rank %&gt;%
+  ggplot(aes(rank, `term frequency`, color = book)) +
+  geom_line(size = 1.1, alpha = 0.8, show.legend = FALSE) +
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+]
+]
+
+---
+
+## tf_idf
+
+- The important words for the content of each document by decreasing the weight for commonly used words and increasing the weight for words that are not used very much in a collection of documents.
+
+- `bind_tf_idf()`:
+
+  - `tbl`: one_row_per_term tidy data frame.
+  
+  - `term`: token (e.g., word).
+  
+  - `document`: book in this case.
+  
+  - `n`: how many times each document contains each term.
+
+---
+
+## tf_idf
+
+.panelset[
+.panel[.panel-name[Output]
+
+```
+## # A tibble: 40,379 x 7
+##   book           word      n  total     tf   idf tf_idf
+##   &lt;fct&gt;          &lt;chr&gt; &lt;int&gt;  &lt;int&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+## 1 Mansfield Park the    6206 160460 0.0387     0      0
+## 2 Mansfield Park to     5475 160460 0.0341     0      0
+## 3 Mansfield Park and    5438 160460 0.0339     0      0
+## 4 Emma           to     5239 160996 0.0325     0      0
+## 5 Emma           the    5201 160996 0.0323     0      0
+## 6 Emma           and    4896 160996 0.0304     0      0
+## # ... with 40,373 more rows
+```
+]
+.panel[.panel-name[Code]
+
+```r
+book_tf_idf &lt;- book_words %&gt;%
+  bind_tf_idf(word, book, n)
+
+book_tf_idf
+```
+
+]
+]
+
+---
+
+## Highest tf-idf words in each Jane Austen novel
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="index_files/figure-html/unnamed-chunk-11-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+]
+.panel[.panel-name[Code]
+
+
+```r
+book_tf_idf %&gt;%
+  group_by(book) %&gt;%
+  slice_max(tf_idf, n = 15) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(tf_idf, fct_reorder(word, tf_idf), fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~book, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+```
+
+
+]
+]
+
+---
+
+class: middle
+
+# Case study 2: A corpus of physics texts
+
+---
+
+## Data preparation
+
+
+```r
+library(gutenbergr)
+
+physics &lt;- gutenberg_download(c(37729, 14725, 13476, 30155),
+  meta_fields = "author"
+)
+```
+
+---
+
+## How many times each word was used in each text of the authors?
+
+.panelset[
+.panel[.panel-name[Output]
+
+```
+## # A tibble: 12,671 x 3
+##   author              word      n
+##   &lt;chr&gt;               &lt;chr&gt; &lt;int&gt;
+## 1 Galilei, Galileo    the    3760
+## 2 Tesla, Nikola       the    3604
+## 3 Huygens, Christiaan the    3553
+## 4 Einstein, Albert    the    2993
+## 5 Galilei, Galileo    of     2049
+## 6 Einstein, Albert    of     2028
+## # ... with 12,665 more rows
+```
+]
+.panel[.panel-name[Code]
+
+```r
+physics_words &lt;- physics %&gt;%
+  unnest_tokens(word, text) %&gt;%
+  count(author, word, sort = TRUE)
+
+physics_words
+```
+
+]
+]
+
+---
+
+## Highest tf_idf words in each physics texts
+
+.panelset[
+.panel[.panel-name[Output]
+
+```
+## # A tibble: 12,671 x 6
+##   author              word      n     tf   idf tf_idf
+##   &lt;fct&gt;               &lt;chr&gt; &lt;int&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+## 1 Galilei, Galileo    the    3760 0.0935     0      0
+## 2 Tesla, Nikola       the    3604 0.0913     0      0
+## 3 Huygens, Christiaan the    3553 0.0928     0      0
+## 4 Einstein, Albert    the    2993 0.0952     0      0
+## 5 Galilei, Galileo    of     2049 0.0510     0      0
+## 6 Einstein, Albert    of     2028 0.0645     0      0
+## # ... with 12,665 more rows
+```
+]
+.panel[.panel-name[Code]
+
+```r
+plot_physics &lt;- physics_words %&gt;%
+  bind_tf_idf(word, author, n) %&gt;%
+  mutate(author = factor(author, levels = c(
+    "Galilei, Galileo",
+    "Huygens, Christiaan",
+    "Tesla, Nikola",
+    "Einstein, Albert"
+  )))
+
+plot_physics
+```
+]
+]
+
+---
+
+## Highest tf_idf words in each physics texts
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="index_files/figure-html/unnamed-chunk-15-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+]
+.panel[.panel-name[Code]
+
+
+```r
+plot_physics %&gt;%
+  group_by(author) %&gt;%
+  slice_max(tf_idf, n = 15) %&gt;%
+  ungroup() %&gt;%
+  mutate(word = reorder(word, tf_idf)) %&gt;%
+  ggplot(aes(tf_idf, word, fill = author)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = "tf-idf", y = NULL) +
+  facet_wrap(~author, ncol = 2, scales = "free")
+```
+
+
+
+]
+]
+
+
+
+---
+
+## Text cleaning
+
+
+```r
+physics %&gt;%
+  filter(str_detect(text, "_k_")) %&gt;%
+  select(text)
+```
+
+```
+## # A tibble: 7 x 1
+##   text                                                           
+##   &lt;chr&gt;                                                          
+## 1 surface AB at the points AK_k_B. Then instead of the hemispher~
+## 2 would needs be that from all the other points K_k_B there shou~
+## 3 necessarily be equal to CD, because C_k_ is equal to CK, and C~
+## 4 the crystal at K_k_, all the points of the wave CO_oc_ will ha~
+## 5 O_o_ has reached K_k_. Which is easy to comprehend, since, of ~
+## 6 CO_oc_ in the crystal, when O_o_ has arrived at K_k_, because ~
+## # ... with 1 more row
+```
+
+---
+
+## Text cleaning
+
+
+```r
+physics %&gt;%
+  filter(str_detect(text, "RC")) %&gt;%
+  select(text)
+```
+
+```
+## # A tibble: 44 x 1
+##   text                                                           
+##   &lt;chr&gt;                                                          
+## 1 line RC, parallel and equal to AB, to be a portion of a wave o~
+## 2 represents the partial wave coming from the point A, after the~
+## 3 be the propagation of the wave RC which fell on AB, and would ~
+## 4 transparent body; seeing that the wave RC, having come to the ~
+## 5 incident rays. Let there be such a ray RC falling upon the sur~
+## 6 CK. Make CO perpendicular to RC, and across the angle KCO adju~
+## # ... with 38 more rows
+```
+
+---
+
+## Text cleaning: custom stop_words dictionary
+
+
+```r
+mystopwords &lt;- tibble(word = c(
+  "eq", "co", "rc", "ac", "ak", "bn",
+  "fig", "file", "cg", "cb", "cm",
+  "ab", "_k", "_k_", "_x"
+))
+
+mystopwords
+```
+
+```
+## # A tibble: 15 x 1
+##   word 
+##   &lt;chr&gt;
+## 1 eq   
+## 2 co   
+## 3 rc   
+## 4 ac   
+## 5 ak   
+## 6 bn   
+## # ... with 9 more rows
+```
+
+```r
+physics_words &lt;- anti_join(physics_words, mystopwords,
+  by = "word"
+)
+
+physics_words
+```
+
+```
+## # A tibble: 12,655 x 3
+##   author              word      n
+##   &lt;chr&gt;               &lt;chr&gt; &lt;int&gt;
+## 1 Galilei, Galileo    the    3760
+## 2 Tesla, Nikola       the    3604
+## 3 Huygens, Christiaan the    3553
+## 4 Einstein, Albert    the    2993
+## 5 Galilei, Galileo    of     2049
+## 6 Einstein, Albert    of     2028
+## # ... with 12,649 more rows
+```
+
+---
+
+## Calculate tf_idf again
+
+.panelset[
+.panel[.panel-name[Output]
+
+```
+## # A tibble: 63 x 6
+##   author           word              n      tf   idf  tf_idf
+##   &lt;fct&gt;            &lt;fct&gt;         &lt;int&gt;   &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;
+## 1 Einstein, Albert relativity      193 0.00620 1.39  0.00860
+## 2 Einstein, Albert theory          181 0.00582 0.693 0.00403
+## 3 Einstein, Albert gravitational    87 0.00280 1.39  0.00388
+## 4 Einstein, Albert ordinates        65 0.00209 1.39  0.00290
+## 5 Einstein, Albert ordinate         60 0.00193 1.39  0.00267
+## 6 Einstein, Albert system          108 0.00347 0.693 0.00241
+## # ... with 57 more rows
+```
+]
+.panel[.panel-name[Code]
+
+```r
+plot_physics &lt;- physics_words %&gt;%
+  bind_tf_idf(word, author, n) %&gt;%
+  mutate(word = str_remove_all(word, "_")) %&gt;%
+  group_by(author) %&gt;%
+  slice_max(tf_idf, n = 15) %&gt;%
+  ungroup() %&gt;%
+  mutate(word = fct_reorder(word, tf_idf)) %&gt;%
+  mutate(author = factor(author, levels = c(
+    "Galilei, Galileo",
+    "Huygens, Christiaan",
+    "Tesla, Nikola",
+    "Einstein, Albert"
+  )))
+
+plot_physics
+```
+]
+]
+
+---
+
+## Visualize tf_idf again
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="index_files/figure-html/unnamed-chunk-19-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+]
+.panel[.panel-name[Code]
+
+
+```r
+ggplot(plot_physics, aes(tf_idf, word, fill = author)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~author, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+```
+
+]
+]
+
+---
+
+class: middle
+
+# Sentiment analysis
+
+---
+
+## Dictionary-based approach
+
+- Compare each word with sentiment lexicons.
+
+- Three general-purpose lexicons:
+
+  * `AFINN` from [Finn Årup Nielsen](http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6010)
+  * `bing` from [Bing Liu and collaborators](https://www.cs.uic.edu/~liub/FBS/sentiment-analysis.html)
+  * `nrc` from [Saif Mohammad and Peter Turney](http://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm)
+
+---
+
+## Sentiment lexicons: afinn
+
+
+```r
+library(tidytext)
+
+get_sentiments("afinn")
+```
+
+```
+## # A tibble: 2,477 x 2
+##   word       value
+##   &lt;chr&gt;      &lt;dbl&gt;
+## 1 abandon       -2
+## 2 abandoned     -2
+## 3 abandons      -2
+## 4 abducted      -2
+## 5 abduction     -2
+## 6 abductions    -2
+## # ... with 2,471 more rows
+```
+
+---
+
+## Sentiment lexicons: bing
+
+
+```r
+get_sentiments("bing")
+```
+
+```
+## # A tibble: 6,786 x 2
+##   word       sentiment
+##   &lt;chr&gt;      &lt;chr&gt;    
+## 1 2-faces    negative 
+## 2 abnormal   negative 
+## 3 abolish    negative 
+## 4 abominable negative 
+## 5 abominably negative 
+## 6 abominate  negative 
+## # ... with 6,780 more rows
+```
+
+---
+
+## Sentiment lexicons: nrc
+
+
+```r
+get_sentiments("nrc")
+```
+
+```
+## # A tibble: 13,875 x 2
+##   word      sentiment
+##   &lt;chr&gt;     &lt;chr&gt;    
+## 1 abacus    trust    
+## 2 abandon   fear     
+## 3 abandon   negative 
+## 4 abandon   sadness  
+## 5 abandoned anger    
+## 6 abandoned fear     
+## # ... with 13,869 more rows
+```
+
+---
+
+class: middle
+
+# Case study: sentiment analysis for Jane Austen's books
+
+---
+
+## Preparing data
+
+.panelset[
+.panel[.panel-name[Output]
+
+```
+## # A tibble: 725,055 x 4
+##   book                linenumber chapter word       
+##   &lt;fct&gt;                    &lt;int&gt;   &lt;int&gt; &lt;chr&gt;      
+## 1 Sense &amp; Sensibility          1       0 sense      
+## 2 Sense &amp; Sensibility          1       0 and        
+## 3 Sense &amp; Sensibility          1       0 sensibility
+## 4 Sense &amp; Sensibility          3       0 by         
+## 5 Sense &amp; Sensibility          3       0 jane       
+## 6 Sense &amp; Sensibility          3       0 austen     
+## # ... with 725,049 more rows
+```
+]
+.panel[.panel-name[Code]
+
+```r
+library(tidytext)
+library(tidyverse)
+library(janeaustenr)
+
+tidy_books &lt;- austen_books() %&gt;%
+  group_by(book) %&gt;%
+  mutate(
+    linenumber = row_number(),
+    chapter = cumsum(str_detect(
+      text,
+      regex("^chapter [\\divxlc]",
+        ignore_case = TRUE
+      )
+    ))
+  ) %&gt;%
+  ungroup() %&gt;%
+  unnest_tokens(word, text)
+
+tidy_books
+```
+
+
+]
+]
+
+
+---
+
+## Joining sentiments
+
+.panelset[
+.panel[.panel-name[Output]
+
+```
+## # A tibble: 920 x 5
+##   book                index negative positive sentiment
+##   &lt;fct&gt;               &lt;dbl&gt;    &lt;int&gt;    &lt;int&gt;     &lt;int&gt;
+## 1 Sense &amp; Sensibility     0       16       32        16
+## 2 Sense &amp; Sensibility     1       19       53        34
+## 3 Sense &amp; Sensibility     2       12       31        19
+## 4 Sense &amp; Sensibility     3       15       31        16
+## 5 Sense &amp; Sensibility     4       16       34        18
+## 6 Sense &amp; Sensibility     5       16       51        35
+## # ... with 914 more rows
+```
+]
+.panel[.panel-name[Code]
+
+```r
+jane_austen_sentiment &lt;- tidy_books %&gt;%
+  inner_join(get_sentiments("bing")) %&gt;%
+  count(book, index = linenumber %/% 80, sentiment) %&gt;%
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %&gt;%
+  mutate(sentiment = positive - negative)
+
+jane_austen_sentiment
+```
+
+]
+]
+
+---
+
+## Visualizing sentiment plot
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="index_files/figure-html/unnamed-chunk-25-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+]
+.panel[.panel-name[Code]
+
+
+```r
+ggplot(jane_austen_sentiment, aes(index, sentiment, fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~book, ncol = 2, scales = "free_x")
+```
+
+
+]
+]
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightLines": true,
+"highlightStyle": "solarized-light",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
