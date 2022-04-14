@@ -44,6 +44,8 @@
 
 * [Week 13-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week13-01-text-analysis_tfidf+sentimentanal).
 
+* [Week 13-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week13-02-named_entity_recognition/NER_with_slides.pptx).
+
 
 ## Dev Toolkit Notes
 
