@@ -1,0 +1,451 @@
+---
+title: "Text Analysis: Regular Expressions"
+subtitle: "<br><br> IS 407"
+author: "JooYoung Seo"
+output:
+  xaringan::moon_reader:
+    css: ["../xaringan-themer.css", "../slides.css"]
+    lib_dir: libs
+    anchor_sections: FALSE
+    nature:
+      ratio: "16:9"
+      highlightLines: true
+      highlightStyle: solarized-light
+      countIncrementalSlides: false
+---
+
+```{r child = "../setup.Rmd"}
+```
+
+class: middle
+
+# Regular Expression (Regex)
+
+---
+
+## Regex
+
+- Represented as a single string and defines a set of matching strings.
+- Learn more at [RStudio regex cheatsheets](https://www.rstudio.com/resources/cheatsheets#regular-expressions).
+
+---
+
+## Nitty-gritty
+
+- `[character]{min,max}`
+
+- `[ ]`: possible character choices
+
+- `{ , }`: number of repitition (or range) for the character
+
+- `^`: start of string (ctrl+home)
+
+- `$`: end of string (ctrl+end)
+
+---
+
+## Example
+
+```{r}
+library(tidyverse)
+
+text <- c("is407", "a", "H2O", "cat", "Cat", "cats", "the cat", "123", "111", "11111", "jonathan", "johnathan") #<<
+df <- tibble(text)
+
+df
+```
+
+---
+
+## Filter cat?
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "cat" #<<
+    )
+  )
+```
+---
+
+## Filter only cat
+
+### Exclude "the cat"
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "^cat" #<<
+    )
+  )
+```
+
+---
+
+## Filter only cat
+
+### Exclude plural
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "^cat$" #<<
+    )
+  )
+```
+
+---
+
+## Filter cat and Cat
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "^[cC]at$" #<<
+    )
+  )
+```
+
+---
+
+## Filter all the alphabetic characters?
+
+```{r eval = FALSE}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "[]" #<<
+    )
+  )
+```
+
+---
+
+## Filter all the alphabetic characters?
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]" #<<
+    )
+  )
+```
+
+---
+
+## Filter all the alphabetic characters?
+
+### Shorten using dash
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "[a-zA-Z]" #<<
+    )
+  )
+```
+
+---
+
+## Filter all the alphabetic characters?
+
+### Don't want to include "is407"
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "[a-zA-Z]$" #<<
+    )
+  )
+```
+
+
+---
+
+## Filter all the alphabetic characters?
+
+### Don't want to include H2O
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "^[a-zA-Z]$" #<<
+    )
+  )
+```
+
+---
+
+## Filter all the alphabetic characters?
+
+### the previous slide is the same as this
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "^[a-zA-Z]{1}$" #<<
+    )
+  )
+```
+
+
+
+---
+
+## Filter all the alphabetic characters?
+
+### How many alphabetic patterns?: `{min,max}`
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "^[a-zA-Z]{1,3}$" #<<
+    )
+  )
+```
+
+---
+
+## Filter all the alphabetic characters?
+
+### For unknown/unlimited max: `{min,}`
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "^[a-zA-Z]{1,}$" #<<
+    )
+  ) %>%
+  print(n = 12)
+```
+
+---
+
+## Bonus: shorthand class
+ 
+### POSIX-compliant regex
+
+- `[[:alpha:]]` is the same as `[a-zA-Z]`
+
+- `+` is the same as `{1,}`
+
+- `[[:alpha:]]+` == `[a-zA-Z]{1,}`
+
+
+---
+
+## Filter all the alphabetic characters?
+
+### Shorthand form
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "^[[:alpha:]]+$" #<<
+    )
+  ) %>%
+  print(n = 12)
+```
+
+---
+
+.question[
+# Quizzes
+
+1. Find "11111".
+
+2. Find digit(s)-only words.
+
+3. Find both "jonathan" and "johnathan".
+
+4. Find "is407" and "H2O" using regex pattern.
+]
+
+---
+
+## Find "11111"
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "[1]{5}" #<<
+    )
+  ) %>%
+  print(n = 12)
+```
+
+---
+
+## Find digits only
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "^[0123456789]{1,}$" #<<
+    )
+  ) %>%
+  print(n = 12)
+```
+
+---
+
+## Find digits only
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "^[0-9]{1,}$" #<<
+    )
+  ) %>%
+  print(n = 12)
+```
+
+---
+
+## Bonus
+
+- `[[:digit:]]` == `[0-9]`
+
+- `\\d` == `[0-9]`
+
+---
+
+## Find digits only: shorthand v1
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "^[[:digit:]]+$" #<<
+    )
+  ) %>%
+  print(n = 12)
+```
+
+
+---
+
+## Find digits only: shorthand v2
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "^\\d+$" #<<
+    )
+  ) %>%
+  print(n = 12)
+```
+
+---
+
+## Find "jonathan" and "johnathan"
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "jo[h]{0,1}nathan" #<<
+    )
+  ) %>%
+  print(n = 12)
+```
+
+---
+
+## Bonus
+
+- `h` == `[h]`
+
+    - because there is only one choice.
+
+- `?` == `{0,1}`
+
+- `[h]{0,1}` == `h?`
+
+---
+
+## Find "jonathan" and "johnathan"
+
+### Shorthand form
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "joh?nathan" #<<
+    )
+  ) %>%
+  print(n = 12)
+```
+
+---
+
+## Find "is407" and "H2O"
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "[a-zA-Z]{1,2}[0-9]{1,3}[a-zA-Z]{0,1}" #<<
+    )
+  ) %>%
+  print(n = 12)
+```
+
+---
+
+## Find "is407" and "H2O": shorthand version
+
+```{r}
+df %>%
+  filter(
+    str_detect(
+      text,
+      "[[:alpha:]]{1,2}\\d{1,3}[[:alpha:]]?" #<<
+    )
+  ) %>%
+  print(n = 12)
+```
+
+---
+
+## Learn more about Regex
+
+- [RStudio regex cheatsheets](https://www.rstudio.com/resources/cheatsheets#regular-expressions).

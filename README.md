@@ -46,6 +46,8 @@
 
 * [Week 13-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week13-02-named_entity_recognition/NER_with_slides.pptx).
 
+* [Week 14-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week14-01-regex).
+
 
 ## Dev Toolkit Notes
 
