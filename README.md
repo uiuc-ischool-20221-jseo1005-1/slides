@@ -50,6 +50,8 @@
 
 * [Week 14-02](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week14-02-interactive-web-app).
 
+* [Week 15-01](https://uiuc-ischool-20221-jseo1005-1.github.io/slides/week15-01-shiny-practice).
+
 
 ## Dev Toolkit Notes
 
