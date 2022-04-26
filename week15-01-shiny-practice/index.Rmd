@@ -1,0 +1,111 @@
+---
+title: "Interactive web apps with Shiny: Practice"
+subtitle: "<br><br> IS 407"
+author: "JooYoung Seo"
+output:
+  xaringan::moon_reader:
+    css: ["../xaringan-themer.css", "../slides.css"]
+    lib_dir: libs
+    anchor_sections: FALSE
+    nature:
+      ratio: "16:9"
+      highlightLines: true
+      highlightStyle: solarized-light
+      countIncrementalSlides: false
+---
+
+```{r child = "../setup.Rmd"}
+```
+
+## Shiny
+
+.pull-left[
+- Shiny is an R package that makes it easy to build interactive web apps straight from R
+- You can host standalone apps on a webpage or embed them in R Markdown documents or build dashboards
+- You can also extend your Shiny apps with CSS themes, htmlwidgets, and JavaScript actions
+- Learn more at [shiny.rstudio.com](https://shiny.rstudio.com/)
+]
+.pull-right[
+```{r echo=FALSE, fig.align = "left"}
+knitr::include_graphics("img/shiny.png")
+```
+]
+
+---
+
+## High level view
+
+- Every Shiny app has a webpage that the user visits, and behind this webpage there is a computer that serves this webpage by running R
+
+- When running your app locally, the computer serving your app is your computer
+
+- When your app is deployed, the computer serving your app is a web server
+
+---
+
+.center[
+[Interactive histogram](https://jooyoungseo.shinyapps.io/shiny_histogram/)
+]
+
+.center[
+<iframe width="1000" height="500" src="https://jooyoungseo.shinyapps.io/shiny_histogram/" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>  
+]
+
+---
+
+## Source code
+
+```{r, eval = FALSE}
+# Load
+library(shiny)
+
+# Front-end user interface
+ui <- fluidPage(
+  titlePanel("JooYoung's Shiny"),
+  sidebarLayout(
+    sidebarPanel(
+      "Sidebar Panel",
+      numericInput(inputId = "num", "Type any integer:", value = 50),
+      selectInput(inputId = "color", "Choose your color for histogram:", choices = colors(), selected = "blue")
+    ),
+    mainPanel(
+      "Main panel",
+      plotOutput(outputId = "histogram")
+    )
+  )
+)
+
+# Back-end logic
+server <- function(input, output, session) {
+  num <- reactive(input$num)
+
+  color <- reactive(input$color)
+  output$histogram <- renderPlot(hist(rnorm(num()), col = color()))
+}
+
+# Execute
+shinyApp(ui, server)
+```
+
+---
+
+## Hands-on exploration
+
+```{r eval = FALSE}
+# Installation
+install.packages("shiny")
+
+# Load
+library(shiny)
+
+# Explore demos
+runExample()
+```
+
+---
+
+## Learn more
+
+- [RStudio Shiny Tutorial](https://shiny.rstudio.com/tutorial/).
+
+- [Mastering Shiny](https://mastering-shiny.org/).
